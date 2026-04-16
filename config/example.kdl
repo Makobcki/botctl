@@ -1,0 +1,28 @@
+// Example serverbot configuration focused on command declarations.
+telegram_token "<TELEGRAM_BOT_TOKEN>"
+alert_chat_id 0
+verbose false
+worker_interval_seconds 30
+db_path "/run/serverbot/serverbot.db"
+allowed_units ["bind9.service", "docker.service", "ssh.service"]
+allowed_zones ["rpz.local", "example.local"]
+
+// Command declarations.
+command "status" tag="view.status" description="Show host status summary"
+command "logs" tag="view.logs" description="Read service logs"
+command_arg "logs" name="unit" type="str" required=true
+command_arg "logs" name="lines" type="int" required=false
+command "docker.inspect" tag="ops.docker" description="Inspect one docker container"
+command_arg "docker.inspect" name="name" type="str" required=true
+command "bind.reload" tag="ops.bind" description="Reload BIND zone or all zones"
+command_arg "bind.reload" name="zone" type="str" required=false
+
+// Worker checker declarations.
+alert_check "system-health" type="placeholder" interval=30 enabled=true
+alert_check "docker-health" type="placeholder" interval=30 enabled=true
+
+// ACL bootstrap grants.
+principal_grant "user:100000001" tag="view.status"
+principal_grant "user:100000001" tag="view.logs"
+principal_grant "user:100000002" tag="ops.docker"
+principal_grant "chat:200000001" tag="view.status"

@@ -29,8 +29,11 @@ def test_kdl_loader_parses_valid_file(tmp_path: Path) -> None:
                 'alert_chat_id 10',
                 'verbose true',
                 'worker_interval_seconds 42',
+                'db_path "/tmp/serverbot.db"',
                 'allowed_units ["bind9.service"]',
                 'allowed_zones ["rpz.local"]',
+                'command "status" tag="view.status" description="Show status"',
+                'alert_check "health" type="placeholder" interval=30 enabled=true',
             ]
         ),
         encoding="utf-8",
@@ -40,7 +43,10 @@ def test_kdl_loader_parses_valid_file(tmp_path: Path) -> None:
 
     assert result.telegram_token == "token"
     assert result.alert_chat_id == 10
+    assert result.db_path == "/tmp/serverbot.db"
     assert result.allowed_units == ("bind9.service",)
+    assert result.command_descriptors[0].name == "status"
+    assert result.alert_checks[0].name == "health"
 
 
 def test_kdl_loader_rejects_non_kdl_extension(tmp_path: Path) -> None:

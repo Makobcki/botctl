@@ -11,12 +11,32 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message
 
 from serverbot.application.config_service import ConfigService
-from serverbot.application.services import AuditService, PolicyService
-from serverbot.application.use_cases import ExecuteCommandUseCase
+from serverbot.application.acl_service import AclService
+from serverbot.application.audit_service import PersistentAuditService
+from serverbot.application.bootstrap_acl import AclBootstrapService
+from serverbot.application.commanding.bootstrap import CommandCatalogBootstrap
+from serverbot.application.commanding.callback_factory import CallbackRequestFactory
+from serverbot.application.commanding.presenter import CommandPresenter
+from serverbot.application.commanding.request_factory import CommandRequestFactory
+from serverbot.application.commanding.token_parser import CommandTokenParser
 from serverbot.config.logging import configure_logging
 from serverbot.config.settings import RuntimeOptions
-from serverbot.domain.models import CommandPolicy, Principal
 from serverbot.infrastructure.config.kdl_loader import KdlConfigLoader
+from serverbot.infrastructure.db.sqlite_repositories import (
+    SqliteAuditRepository,
+    SqliteBootstrap,
+    SqliteConnectionFactory,
+    SqlitePrincipalTagRepository,
+)
+from serverbot.infrastructure.telegram_parser import TelegramCommandGateway
+from serverbot.infrastructure.telegram_callback_gateway import TelegramCallbackGateway
+from serverbot.infrastructure.telegram_controller import TelegramCommandController
+from serverbot.infrastructure.telegram_middlewares import (
+    AccessLogMiddleware,
+    CommandRequestBuildMiddleware,
+    PrincipalResolverMiddleware,
+)
+from serverbot.infrastructure.telegram_updates import TelegramUpdateHandler, build_command_router
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +64,8 @@ async def run_bot() -> None:
     runtime_options = RuntimeOptions()
     app_config = ConfigService(KdlConfigLoader()).load(runtime_options.config_path)
     configure_logging(app_config.verbose)
+    connection_factory = SqliteConnectionFactory(app_config.db_path)
+    SqliteBootstrap(connection_factory).apply()
 
     if not app_config.telegram_token:
         logger.warning("No TELEGRAM token configured; bot startup skipped.")
@@ -55,11 +77,47 @@ async def run_bot() -> None:
     router.message.register(_on_start, CommandStart())
     dispatcher.include_router(router)
 
-    policies = {
-        "status": CommandPolicy(command_name="status", required_tag="view.status"),
-    }
-    use_case = ExecuteCommandUseCase(PolicyService(policies), AuditService())
-    _ = await use_case.execute(Principal(telegram_id=0, tags=frozenset({"view.status"})), "status")
+    acl_service = AclService(SqlitePrincipalTagRepository(connection_factory))
+    AclBootstrapService(acl_service).apply(app_config.bootstrap_grants)
+    first_descriptor = app_config.command_descriptors[0]
+    command_pipeline = CommandCatalogBootstrap(
+        descriptors=app_config.command_descriptors
+    ).build_pipeline(
+        acl_service=acl_service,
+        audit_service=PersistentAuditService(SqliteAuditRepository(connection_factory)),
+    )
+    request_factory = CommandRequestFactory(
+        command_registry=command_pipeline.command_registry,
+        token_parser=CommandTokenParser(),
+    )
+    telegram_gateway = TelegramCommandGateway(
+        request_factory=request_factory,
+        command_pipeline=command_pipeline,
+    )
+    controller = TelegramCommandController(
+        gateway=telegram_gateway,
+        callback_gateway=TelegramCallbackGateway(
+            request_factory=CallbackRequestFactory(
+                command_registry=command_pipeline.command_registry,
+                token_parser=CommandTokenParser(),
+            ),
+            command_pipeline=command_pipeline,
+        ),
+        presenter=CommandPresenter(),
+    )
+    command_router = build_command_router(
+        TelegramUpdateHandler(controller=controller),
+        message_middlewares=(
+            PrincipalResolverMiddleware(),
+            CommandRequestBuildMiddleware(request_factory=request_factory),
+            AccessLogMiddleware(),
+        ),
+    )
+    dispatcher.include_router(command_router)
+    _ = await controller.handle_text(
+        principal_id=0,
+        text=f"/{first_descriptor.name}",
+    )
 
     stop_event = asyncio.Event()
 

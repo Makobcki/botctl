@@ -5,6 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
+from serverbot.domain.commanding.models import CommandDescriptor
+from serverbot.domain.alerts import AlertCheckDescriptor
+from serverbot.domain.security import PrincipalGrantDescriptor
+
 
 @dataclass(frozen=True)
 class CommandResult:
@@ -50,16 +54,24 @@ class AppConfig:
         alert_chat_id: Alert destination chat.
         verbose: Verbose logging flag.
         worker_interval_seconds: Worker interval timeout.
+        db_path: SQLite database path.
         allowed_units: Allowed systemd units.
         allowed_zones: Allowed DNS zones.
+        command_descriptors: Supported command descriptors from configuration.
+        alert_checks: Configured worker alert check descriptors.
+        bootstrap_grants: ACL grants applied at startup.
     """
 
     telegram_token: str
     alert_chat_id: int
     verbose: bool
     worker_interval_seconds: int
+    db_path: str
     allowed_units: tuple[str, ...]
     allowed_zones: tuple[str, ...]
+    command_descriptors: tuple[CommandDescriptor, ...]
+    alert_checks: tuple[AlertCheckDescriptor, ...]
+    bootstrap_grants: tuple[PrincipalGrantDescriptor, ...]
 
 
 class ConfigLoader(Protocol):
