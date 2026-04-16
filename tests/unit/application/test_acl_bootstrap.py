@@ -48,6 +48,18 @@ class InMemoryTagRepository:
 
         self.state[principal_id] = tags
 
+    def has_principals(self) -> bool:
+        """Check whether in-memory ACL already has principals.
+
+        Args:
+            None.
+
+        Returns:
+            True when repository is non-empty.
+        """
+
+        return bool(self.state)
+
 
 def test_acl_bootstrap_applies_all_grants() -> None:
     """Bootstrap should apply each configured grant.

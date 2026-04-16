@@ -54,6 +54,18 @@ class InMemoryPrincipalTagRepository:
 
         self.values[principal_id] = tags
 
+    def has_principals(self) -> bool:
+        """Check whether any principal exists in fake repository.
+
+        Args:
+            None.
+
+        Returns:
+            True when repository contains principals.
+        """
+
+        return bool(self.values)
+
 
 @dataclass
 class InMemoryAuditRepository:

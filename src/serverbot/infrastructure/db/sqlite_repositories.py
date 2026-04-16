@@ -151,6 +151,25 @@ class SqlitePrincipalTagRepository(PrincipalTagRepository):
                 [(principal_id, tag) for tag in sorted(tags)],
             )
 
+    def has_principals(self) -> bool:
+        """Check if at least one ACL principal exists.
+
+        Args:
+            None.
+
+        Returns:
+            True when repository contains one or more principals.
+
+        Raises:
+            sqlite3.Error: If query fails.
+        """
+
+        with self.connection_factory.connect() as connection:
+            row = connection.execute(
+                "SELECT 1 FROM principal_tags LIMIT 1"
+            ).fetchone()
+        return row is not None
+
 
 @dataclass(frozen=True)
 class SqliteAuditRepository(AuditRepository):

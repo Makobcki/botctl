@@ -75,3 +75,28 @@ class AclService:
         tags.discard(tag)
         self.principal_tag_repository.set_tags(principal_id, frozenset(tags))
         logger.info("Revoked tag='%s' from principal=%s", tag, principal_id)
+
+    def bootstrap_first_admin(self, principal_id: int, tags: frozenset[str]) -> bool:
+        """Grant full tag set to first principal when ACL is empty.
+
+        Args:
+            principal_id: Telegram principal identifier to bootstrap.
+            tags: Full immutable tag set to grant.
+
+        Returns:
+            True when bootstrap happened, False when repository already has principals.
+
+        Raises:
+            Exception: Propagates storage adapter errors.
+        """
+
+        if self.principal_tag_repository.has_principals():
+            logger.debug("First-admin bootstrap skipped; ACL already initialized.")
+            return False
+        self.principal_tag_repository.set_tags(principal_id, tags)
+        logger.warning(
+            "First-admin bootstrap applied principal=%s granted_tags=%s",
+            principal_id,
+            len(tags),
+        )
+        return True

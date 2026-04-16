@@ -51,6 +51,19 @@ class PrincipalTagRepository(Protocol):
             Exception: Storage-level write errors.
         """
 
+    def has_principals(self) -> bool:
+        """Check whether ACL repository already has any principal entries.
+
+        Args:
+            None.
+
+        Returns:
+            True when at least one principal exists.
+
+        Raises:
+            Exception: Storage-level read errors.
+        """
+
 
 class AuditRepository(Protocol):
     """Repository abstraction for command audit records."""
