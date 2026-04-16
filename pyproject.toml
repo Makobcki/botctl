@@ -1,0 +1,21 @@
+[project]
+name = "serverbot"
+version = "0.1.0"
+description = "Telegram control bot with worker monitoring"
+requires-python = ">=3.12"
+dependencies = [
+  "aiogram>=3.7.0",
+  "rich>=13.7.1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.2.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
