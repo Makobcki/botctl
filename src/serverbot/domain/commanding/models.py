@@ -28,13 +28,25 @@ class CommandDescriptor:
         name: Stable internal command name.
         required_tag: ACL tag required to execute command.
         description: Human-readable description of command purpose.
+        categories: Optional command categories.
         arguments: Immutable argument descriptor list.
     """
 
     name: str
     required_tag: str
     description: str
+    categories: tuple[str, ...] = field(default_factory=tuple)
     arguments: tuple[CommandArgumentDescriptor, ...] = field(default_factory=tuple)
+
+    @property
+    def help(self) -> str:
+        """Alias for compatibility with command help terminology.
+
+        Returns:
+            Human-readable command help text.
+        """
+
+        return self.description
 
 
 @dataclass(frozen=True)
@@ -45,11 +57,13 @@ class CommandRequest:
         principal_id: Telegram principal identifier.
         command_name: Internal command name.
         arguments: Immutable argument dictionary.
+        raw_tokens: Original command tokens after command name.
     """
 
     principal_id: int
     command_name: str
     arguments: dict[str, str] = field(default_factory=dict)
+    raw_tokens: tuple[str, ...] = field(default_factory=tuple)
 
 
 @dataclass(frozen=True)

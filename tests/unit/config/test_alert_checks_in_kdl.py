@@ -32,7 +32,6 @@ def test_kdl_loader_rejects_invalid_alert_check_declaration(tmp_path: Path) -> N
                 'db_path "/tmp/serverbot.db"',
                 'allowed_units ["bind9.service"]',
                 'allowed_zones ["rpz.local"]',
-                'command "status" tag="view.status" description="Show status"',
                 'alert_check "health" type="placeholder" interval=abc enabled=true',
             ]
         ),

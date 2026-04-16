@@ -1,4 +1,4 @@
-"""Unit tests validating command declarations in KDL config."""
+"""Unit tests validating runtime KDL excludes command declarations."""
 
 from pathlib import Path
 
@@ -8,8 +8,8 @@ from serverbot.domain.errors import DomainError
 from serverbot.infrastructure.config.kdl_loader import KdlConfigLoader
 
 
-def test_kdl_loader_requires_at_least_one_command(tmp_path: Path) -> None:
-    """Loader should reject config without command declarations.
+def test_kdl_loader_allows_runtime_config_without_commands(tmp_path: Path) -> None:
+    """Loader should parse runtime config without command declarations.
 
     Args:
         tmp_path: Pytest temporary path fixture.
@@ -37,12 +37,12 @@ def test_kdl_loader_requires_at_least_one_command(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    with pytest.raises(DomainError):
-        KdlConfigLoader().load(str(config_file))
+    result = KdlConfigLoader().load(str(config_file))
+    assert result.command_descriptors == tuple()
 
 
-def test_kdl_loader_parses_command_declaration(tmp_path: Path) -> None:
-    """Loader should parse command metadata from KDL declarations.
+def test_kdl_loader_rejects_command_declarations_in_runtime_config(tmp_path: Path) -> None:
+    """Loader should reject command metadata in runtime config.
 
     Args:
         tmp_path: Pytest temporary path fixture.
@@ -66,15 +66,11 @@ def test_kdl_loader_parses_command_declaration(tmp_path: Path) -> None:
                 'allowed_units ["bind9.service"]',
                 'allowed_zones ["rpz.local"]',
                 'command "status" tag="view.status" description="Show status"',
-                'command_arg "status" name="details" type="str" required=false',
                 'alert_check "health" type="placeholder" interval=30 enabled=true',
             ]
         ),
         encoding="utf-8",
     )
 
-    result = KdlConfigLoader().load(str(config_file))
-
-    assert result.command_descriptors[0].required_tag == "view.status"
-    assert result.command_descriptors[0].arguments[0].name == "details"
-    assert result.alert_checks[0].check_type == "placeholder"
+    with pytest.raises(DomainError):
+        KdlConfigLoader().load(str(config_file))
