@@ -1,0 +1,16 @@
+name "audit"
+description "Inspect recent audit events"
+category = ["audit", "admin"]
+
+name.last {
+    description "Show latest audit entries"
+    execute {
+        stream false
+        print "Usage: /audit last [N]"
+    }
+}
+
+execute {
+    stream false
+    print "Usage: /audit last [N]"
+}

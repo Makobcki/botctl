@@ -1,54 +1,12 @@
-// Example command configuration in command-only format.
+// Minimal example-only command config.
+// Production command catalog has been moved to commands/command.kdl.
 name "status"
 description "Show host status summary"
-category = ["docs", "docker"]
-
-name.test {
-    description "Run pytest suite"
-    execute {
-        stream true
-        status.executing "running"
-        print "starting tests..."
-        command "pytest $@"
-        status.executing "success"
-    }
-    except {
-        code "127"
-        code.execute {
-            print "pytest is not installed"
-        }
-        code ">32"
-        code.execute {
-            print "tests failed with critical exit code"
-        }
-    }
-}
-
-execute {
-    stream false
-    status.executing "running"
-    command "echo status ok"
-    status.executing "success"
-}
-
-name "logs"
-description "Read service logs"
 category = ["docs"]
 
 execute {
     stream true
     status.executing "running"
-    command "journalctl -n 50 --no-pager $@"
-    status.executing "success"
-}
-
-name "docker.inspect"
-description "Inspect one docker container"
-category = ["docker"]
-
-execute {
-    stream true
-    status.executing "running"
-    command "docker inspect $@"
+    command "echo status ok"
     status.executing "success"
 }

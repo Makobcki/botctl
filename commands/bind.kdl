@@ -1,0 +1,68 @@
+name "bind"
+description "Operate BIND checks and control commands"
+category = ["bind", "dns", "ops"]
+
+name.checkconf {
+    description "Validate named configuration syntax"
+    execute {
+        stream true
+        status.executing "validating named.conf..."
+        command "named-checkconf"
+        status.executing "done"
+    }
+}
+
+name.checkzone {
+    description "Validate zone file with named-checkzone"
+    execute {
+        stream true
+        status.executing "validating zone..."
+        command "named-checkzone $@"
+        status.executing "done"
+    }
+}
+
+name.reconfig {
+    description "Apply BIND reconfig"
+    execute {
+        stream true
+        status.executing "running rndc reconfig..."
+        command "rndc reconfig"
+        status.executing "done"
+    }
+}
+
+name.reload {
+    description "Reload all BIND zones"
+    execute {
+        stream true
+        status.executing "running rndc reload..."
+        command "rndc reload"
+        status.executing "done"
+    }
+}
+
+name.reload-zone {
+    description "Reload one BIND zone"
+    execute {
+        stream true
+        status.executing "reloading zone..."
+        command "rndc reload $@"
+        status.executing "done"
+    }
+}
+
+name.flush {
+    description "Flush resolver cache"
+    execute {
+        stream true
+        status.executing "flushing cache..."
+        command "rndc flush"
+        status.executing "done"
+    }
+}
+
+execute {
+    stream false
+    print "Usage: /bind checkconf | checkzone <zone> <file> | reconfig | reload | reload-zone <zone> | flush"
+}

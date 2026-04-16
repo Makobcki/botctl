@@ -1,0 +1,20 @@
+name "status"
+description "Show host summary metrics and service health"
+category = ["status", "system"]
+
+name.full {
+    description "Show extended status including network and temperature"
+    execute {
+        stream true
+        status.executing "collecting extended status..."
+        command "echo '[status/full] collecting CPU, RAM, network, and sensors'"
+        status.executing "done"
+    }
+}
+
+execute {
+    stream true
+    status.executing "collecting status..."
+    command "echo '[status] uptime/cpu/ram overview'"
+    status.executing "done"
+}

@@ -80,3 +80,78 @@ class AuditRepository(Protocol):
         Raises:
             Exception: Storage-level read errors.
         """
+
+
+@dataclass(frozen=True)
+class RpzRuleRecord:
+    """RPZ rule row content.
+
+    Args:
+        zone: RPZ zone name.
+        qname: Trigger DNS name.
+        policy: RPZ policy kind (`nxdomain`, `nodata`, `cname`).
+        value: Optional policy value.
+    """
+
+    zone: str
+    qname: str
+    policy: str
+    value: str = ""
+
+
+class RpzRuleRepository(Protocol):
+    """Repository abstraction for RPZ rules."""
+
+    def upsert(self, record: RpzRuleRecord) -> None:
+        """Create or update RPZ rule.
+
+        Args:
+            record: RPZ record payload.
+
+        Returns:
+            None.
+
+        Raises:
+            Exception: Storage-level write errors.
+        """
+
+    def delete(self, zone: str, qname: str) -> bool:
+        """Delete RPZ rule by zone and qname.
+
+        Args:
+            zone: Zone name.
+            qname: Rule qname.
+
+        Returns:
+            True when a record was deleted.
+
+        Raises:
+            Exception: Storage-level write errors.
+        """
+
+    def list_rules(self, zone: str | None = None) -> list[RpzRuleRecord]:
+        """List RPZ rules.
+
+        Args:
+            zone: Optional zone filter.
+
+        Returns:
+            Sorted list of RPZ records.
+
+        Raises:
+            Exception: Storage-level read errors.
+        """
+
+    def find_rules(self, query: str, zone: str | None = None) -> list[RpzRuleRecord]:
+        """Find RPZ rules by qname substring.
+
+        Args:
+            query: Search query string.
+            zone: Optional zone filter.
+
+        Returns:
+            Matching RPZ records.
+
+        Raises:
+            Exception: Storage-level read errors.
+        """
