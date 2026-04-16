@@ -1,0 +1,7 @@
+// serverbot runtime config
+telegram_token ""
+alert_chat_id 0
+verbose false
+worker_interval_seconds 30
+allowed_units ["bind9.service", "docker.service"]
+allowed_zones ["rpz.local"]
