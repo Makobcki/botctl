@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from serverbot.domain.alerts import AlertCheckDescriptor
-from serverbot.domain.commanding.models import CommandArgumentDescriptor, CommandDescriptor
 from serverbot.domain.errors import DomainError
 from serverbot.domain.ports import AppConfig, ConfigLoader
 from serverbot.domain.security import PrincipalGrantDescriptor
@@ -42,7 +41,7 @@ class KdlConfigLoader(ConfigLoader):
         if file_path.suffix != ".kdl":
             raise DomainError("Configuration file must use .kdl extension.", "CONFIG_EXT_INVALID")
 
-        raw_values, command_descriptors, alert_checks, bootstrap_grants = self._parse_document(
+        raw_values, alert_checks, bootstrap_grants = self._parse_document(
             file_path.read_text(encoding="utf-8")
         )
         required_keys = {
@@ -58,9 +57,6 @@ class KdlConfigLoader(ConfigLoader):
         if missing:
             missing_values = ", ".join(sorted(missing))
             raise DomainError(f"Missing keys: {missing_values}", "CONFIG_MISSING_KEY")
-        if not command_descriptors:
-            raise DomainError("At least one command must be configured.", "CONFIG_MISSING_COMMANDS")
-
         return AppConfig(
             telegram_token=raw_values["telegram_token"],
             alert_chat_id=int(raw_values["alert_chat_id"]),
@@ -69,7 +65,7 @@ class KdlConfigLoader(ConfigLoader):
             db_path=raw_values["db_path"],
             allowed_units=tuple(self._parse_list(raw_values["allowed_units"])),
             allowed_zones=tuple(self._parse_list(raw_values["allowed_zones"])),
-            command_descriptors=tuple(command_descriptors),
+            command_descriptors=tuple(),
             alert_checks=tuple(alert_checks),
             bootstrap_grants=tuple(bootstrap_grants),
         )
@@ -77,12 +73,7 @@ class KdlConfigLoader(ConfigLoader):
     def _parse_document(
         self,
         content: str,
-    ) -> tuple[
-        dict[str, str],
-        list[CommandDescriptor],
-        list[AlertCheckDescriptor],
-        list[PrincipalGrantDescriptor],
-    ]:
+    ) -> tuple[dict[str, str], list[AlertCheckDescriptor], list[PrincipalGrantDescriptor]]:
         """Parse KDL document into scalar settings and command descriptors.
 
         Args:
@@ -96,8 +87,6 @@ class KdlConfigLoader(ConfigLoader):
         """
 
         mapping: dict[str, str] = {}
-        command_definitions: dict[str, CommandDescriptor] = {}
-        argument_map: dict[str, list[CommandArgumentDescriptor]] = {}
         alert_checks: list[AlertCheckDescriptor] = []
         bootstrap_grants: list[PrincipalGrantDescriptor] = []
         for line in content.splitlines():
@@ -105,17 +94,16 @@ class KdlConfigLoader(ConfigLoader):
             if not stripped or stripped.startswith("//"):
                 continue
             if stripped.startswith("command "):
-                descriptor = self._parse_command_descriptor(stripped)
-                command_definitions[descriptor.name] = descriptor
+                raise DomainError(
+                    "Command declarations must be stored in commands/*.kdl files.",
+                    "CONFIG_COMMAND_DECLARATION_FORBIDDEN",
+                )
                 continue
             if stripped.startswith("command_arg "):
-                command_name, argument_descriptor = self._parse_command_argument_descriptor(stripped)
-                if command_name not in command_definitions:
-                    raise DomainError(
-                        f"command_arg references unknown command: {command_name}",
-                        "CONFIG_COMMAND_ARG_UNKNOWN_COMMAND",
-                    )
-                argument_map.setdefault(command_name, []).append(argument_descriptor)
+                raise DomainError(
+                    "Command declarations must be stored in commands/*.kdl files.",
+                    "CONFIG_COMMAND_DECLARATION_FORBIDDEN",
+                )
                 continue
             if stripped.startswith("alert_check "):
                 alert_checks.append(self._parse_alert_check_descriptor(stripped))
@@ -129,100 +117,7 @@ class KdlConfigLoader(ConfigLoader):
             key = match.group(1)
             value = match.group(2).strip().strip('"')
             mapping[key] = value
-        command_descriptors = self._build_command_descriptors(command_definitions, argument_map)
-        return mapping, command_descriptors, alert_checks, bootstrap_grants
-
-    def _parse_command_descriptor(self, line: str) -> CommandDescriptor:
-        """Parse one `command` declaration line.
-
-        Args:
-            line: Raw KDL line starting with `command`.
-
-        Returns:
-            Parsed command descriptor.
-
-        Raises:
-            DomainError: If command declaration format is invalid.
-        """
-
-        pattern = (
-            r'command\s+"(?P<name>[a-z0-9._-]+)"\s+'
-            r'tag="(?P<tag>[a-z0-9._-]+)"\s+'
-            r'description="(?P<description>[^"]+)"'
-        )
-        match = re.fullmatch(pattern, line)
-        if match is None:
-            raise DomainError(f"Invalid command declaration: {line}", "CONFIG_COMMAND_PARSE_ERROR")
-        return CommandDescriptor(
-            name=match.group("name"),
-            required_tag=match.group("tag"),
-            description=match.group("description"),
-        )
-
-    def _parse_command_argument_descriptor(
-        self,
-        line: str,
-    ) -> tuple[str, CommandArgumentDescriptor]:
-        """Parse one `command_arg` declaration line.
-
-        Args:
-            line: Raw KDL line starting with `command_arg`.
-
-        Returns:
-            Pair of command name and parsed argument descriptor.
-
-        Raises:
-            DomainError: If argument declaration format is invalid.
-        """
-
-        pattern = (
-            r'command_arg\s+"(?P<command_name>[a-z0-9._-]+)"\s+'
-            r'name="(?P<name>[a-z0-9._-]+)"\s+'
-            r'type="(?P<value_type>str|int)"\s+'
-            r'required=(?P<required>true|false)'
-        )
-        match = re.fullmatch(pattern, line)
-        if match is None:
-            raise DomainError(f"Invalid command_arg declaration: {line}", "CONFIG_COMMAND_ARG_PARSE_ERROR")
-        return (
-            match.group("command_name"),
-            CommandArgumentDescriptor(
-                name=match.group("name"),
-                value_type=match.group("value_type"),
-                required=match.group("required") == "true",
-            ),
-        )
-
-    def _build_command_descriptors(
-        self,
-        command_definitions: dict[str, CommandDescriptor],
-        argument_map: dict[str, list[CommandArgumentDescriptor]],
-    ) -> list[CommandDescriptor]:
-        """Attach parsed argument definitions to command descriptors.
-
-        Args:
-            command_definitions: Base descriptors by command name.
-            argument_map: Parsed command arguments grouped by command name.
-
-        Returns:
-            Sorted command descriptor list with argument metadata.
-
-        Raises:
-            None.
-        """
-
-        result: list[CommandDescriptor] = []
-        for command_name, descriptor in sorted(command_definitions.items()):
-            arguments = tuple(argument_map.get(command_name, []))
-            result.append(
-                CommandDescriptor(
-                    name=descriptor.name,
-                    required_tag=descriptor.required_tag,
-                    description=descriptor.description,
-                    arguments=arguments,
-                )
-            )
-        return result
+        return mapping, alert_checks, bootstrap_grants
 
     def _parse_alert_check_descriptor(self, line: str) -> AlertCheckDescriptor:
         """Parse one `alert_check` declaration line.

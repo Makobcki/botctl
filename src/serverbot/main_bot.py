@@ -21,6 +21,7 @@ from serverbot.application.commanding.request_factory import CommandRequestFacto
 from serverbot.application.commanding.token_parser import CommandTokenParser
 from serverbot.config.logging import configure_logging
 from serverbot.config.settings import RuntimeOptions
+from serverbot.infrastructure.config.command_kdl_loader import CommandKdlLoader
 from serverbot.infrastructure.config.kdl_loader import KdlConfigLoader
 from serverbot.infrastructure.db.sqlite_repositories import (
     SqliteAuditRepository,
@@ -63,6 +64,8 @@ async def run_bot() -> None:
 
     runtime_options = RuntimeOptions()
     app_config = ConfigService(KdlConfigLoader()).load(runtime_options.config_path)
+    command_definitions = CommandKdlLoader().load_definitions(runtime_options.command_config_path)
+    command_descriptors = tuple(definition.descriptor for definition in command_definitions)
     configure_logging(app_config.verbose)
     connection_factory = SqliteConnectionFactory(app_config.db_path)
     SqliteBootstrap(connection_factory).apply()
@@ -79,9 +82,10 @@ async def run_bot() -> None:
 
     acl_service = AclService(SqlitePrincipalTagRepository(connection_factory))
     AclBootstrapService(acl_service).apply(app_config.bootstrap_grants)
-    first_descriptor = app_config.command_descriptors[0]
+    first_descriptor = command_descriptors[0]
     command_pipeline = CommandCatalogBootstrap(
-        descriptors=app_config.command_descriptors
+        descriptors=command_descriptors,
+        definitions=command_definitions,
     ).build_pipeline(
         acl_service=acl_service,
         audit_service=PersistentAuditService(SqliteAuditRepository(connection_factory)),

@@ -1,12 +1,12 @@
-"""Validation tests for bundled example KDL configuration."""
+"""Validation tests for bundled command KDL configuration."""
 
 from pathlib import Path
 
-from serverbot.infrastructure.config.kdl_loader import KdlConfigLoader
+from serverbot.infrastructure.config.command_kdl_loader import CommandKdlLoader
 
 
 def test_example_kdl_is_valid_and_parsable() -> None:
-    """Bundled example KDL should parse into non-empty structures.
+    """Bundled command KDL should parse into non-empty descriptors.
 
     Args:
         None.
@@ -18,10 +18,8 @@ def test_example_kdl_is_valid_and_parsable() -> None:
         None.
     """
 
-    example_path = Path("config/example.kdl")
+    example_path = Path("commands/example.kdl")
 
-    result = KdlConfigLoader().load(str(example_path))
+    result = CommandKdlLoader().load(str(example_path))
 
-    assert len(result.command_descriptors) >= 3
-    assert len(result.alert_checks) >= 1
-    assert len(result.bootstrap_grants) >= 1
+    assert len(result) >= 3

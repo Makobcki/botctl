@@ -49,4 +49,5 @@ class CommandRequestFactory:
             principal_id=principal_id,
             command_name=command_name,
             arguments=arguments,
+            raw_tokens=tuple(tokens[1:]),
         )

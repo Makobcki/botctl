@@ -29,7 +29,6 @@ def test_kdl_loader_parses_acl_grants(tmp_path: Path) -> None:
                 'db_path "/tmp/serverbot.db"',
                 'allowed_units ["bind9.service"]',
                 'allowed_zones ["rpz.local"]',
-                'command "status" tag="view.status" description="Show status"',
                 'alert_check "health" type="placeholder" interval=30 enabled=true',
                 'principal_grant "user:1" tag="view.status"',
             ]
