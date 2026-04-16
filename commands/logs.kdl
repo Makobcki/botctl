@@ -1,0 +1,28 @@
+name "logs"
+description "Read journal and container logs"
+category = ["logs", "ops"]
+
+name.unit {
+    description "Read last N lines from journalctl for a unit"
+    execute {
+        stream true
+        status.executing "loading unit logs..."
+        command "journalctl --unit=$1 -n ${2:-100} --no-pager"
+        status.executing "done"
+    }
+}
+
+name.docker {
+    description "Read last N lines from docker logs"
+    execute {
+        stream true
+        status.executing "loading container logs..."
+        command "docker logs --tail ${2:-100} $1"
+        status.executing "done"
+    }
+}
+
+execute {
+    stream false
+    print "Usage: /logs unit <service> [N] | docker <container> [N]"
+}

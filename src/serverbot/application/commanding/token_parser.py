@@ -34,6 +34,8 @@ class CommandTokenParser:
             DomainError: If token syntax is invalid.
         """
 
+        if not argument_descriptors:
+            return {}
         result: dict[str, str] = {}
         positional_index = 0
         descriptor_names = [descriptor.name for descriptor in argument_descriptors]

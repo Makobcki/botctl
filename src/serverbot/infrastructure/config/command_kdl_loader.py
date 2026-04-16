@@ -29,10 +29,38 @@ class CommandKdlLoader:
         """Load complete command runtime definitions."""
 
         file_path = Path(path)
+        if file_path.is_dir():
+            definitions: list[CommandDefinition] = []
+            for kdl_file in self._discover_command_files(file_path):
+                lines = self._normalize_lines(kdl_file.read_text(encoding="utf-8"))
+                definitions.extend(self._parse_commands(lines))
+            return tuple(definitions)
         if file_path.suffix != ".kdl":
             raise DomainError("Command config file must use .kdl extension.", "COMMAND_CONFIG_EXT_INVALID")
         lines = self._normalize_lines(file_path.read_text(encoding="utf-8"))
         return tuple(self._parse_commands(lines))
+
+    def _discover_command_files(self, root_directory: Path) -> tuple[Path, ...]:
+        """Discover command KDL files in directory excluding example sample.
+
+        Args:
+            root_directory: Directory containing command KDL files.
+
+        Returns:
+            Sorted tuple of KDL file paths.
+
+        Raises:
+            DomainError: If no command files are found.
+        """
+
+        files = tuple(
+            path
+            for path in sorted(root_directory.glob("*.kdl"))
+            if path.name != "example.kdl"
+        )
+        if not files:
+            raise DomainError("No command KDL files found in directory.", "COMMAND_CONFIG_NOT_FOUND")
+        return files
 
     def _normalize_lines(self, content: str) -> list[str]:
         result: list[str] = []

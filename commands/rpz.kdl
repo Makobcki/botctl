@@ -1,0 +1,40 @@
+name "rpz"
+description "Manage RPZ rules through repository-backed workflow"
+category = ["rpz", "dns", "ops"]
+
+name.list {
+    description "List RPZ rules"
+    execute {
+        stream false
+        print "Usage: /rpz list"
+    }
+}
+
+name.add {
+    description "Add RPZ rule"
+    execute {
+        stream false
+        print "Usage: /rpz add <name> <policy> [value]"
+    }
+}
+
+name.del {
+    description "Delete RPZ rule"
+    execute {
+        stream false
+        print "Usage: /rpz del <name>"
+    }
+}
+
+name.find {
+    description "Find RPZ rule by query"
+    execute {
+        stream false
+        print "Usage: /rpz find <query>"
+    }
+}
+
+execute {
+    stream false
+    print "Usage: /rpz list | add <name> <policy> [value] | del <name> | find <query>"
+}

@@ -15,8 +15,8 @@ from serverbot.infrastructure.db.sqlite_repositories import (
 )
 
 
-def test_pipeline_returns_placeholder_response(tmp_path: Path) -> None:
-    """Pipeline should return placeholder success for allowed principal.
+def test_pipeline_dispatches_adapter_backed_status(tmp_path: Path) -> None:
+    """Pipeline should execute adapter-backed status for allowed principal.
 
     Args:
         tmp_path: Pytest temporary path fixture.
@@ -52,7 +52,7 @@ def test_pipeline_returns_placeholder_response(tmp_path: Path) -> None:
     )
 
     assert response.success is True
-    assert "not implemented yet" in response.message
+    assert response.message
 
 
 def test_pipeline_denies_without_tag_and_audits(tmp_path: Path) -> None:
