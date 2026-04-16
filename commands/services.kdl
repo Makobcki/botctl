@@ -1,0 +1,38 @@
+name "services"
+description "Run allowlisted systemd operations"
+category = ["systemd", "ops"]
+
+name.status {
+    description "Show systemd status for unit"
+    execute {
+        stream true
+        status.executing "querying systemd..."
+        command "systemctl status $@ --no-pager"
+        status.executing "done"
+    }
+}
+
+name.restart {
+    description "Restart systemd unit"
+    execute {
+        stream true
+        status.executing "restarting unit..."
+        command "systemctl restart $@"
+        status.executing "done"
+    }
+}
+
+name.reload {
+    description "Reload systemd unit"
+    execute {
+        stream true
+        status.executing "reloading unit..."
+        command "systemctl reload $@"
+        status.executing "done"
+    }
+}
+
+execute {
+    stream false
+    print "Usage: /services status <unit> | restart <unit> | reload <unit>"
+}

@@ -1,0 +1,12 @@
+// Minimal example-only command config.
+// Production command catalog has been moved to commands/command.kdl.
+name "status"
+description "Show host status summary"
+category = ["docs"]
+
+execute {
+    stream true
+    status.executing "running"
+    command "echo status ok"
+    status.executing "success"
+}

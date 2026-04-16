@@ -1,0 +1,78 @@
+name "docker"
+description "Manage docker containers and inspect health details"
+category = ["docker", "ops"]
+
+name.ls {
+    description "List running containers"
+    execute {
+        stream true
+        status.executing "loading running containers..."
+        command "docker ps --format 'table {{.Names}}\\t{{.Status}}\\t{{.Image}}'"
+        status.executing "done"
+    }
+}
+
+name.ps {
+    description "List running containers (alias of ls)"
+    execute {
+        stream true
+        status.executing "loading containers..."
+        command "docker ps"
+        status.executing "done"
+    }
+}
+
+name.ps-all {
+    description "List all containers including stopped"
+    execute {
+        stream true
+        status.executing "loading all containers..."
+        command "docker ps -a"
+        status.executing "done"
+    }
+}
+
+name.inspect {
+    description "Inspect a single container and show restart/exit details"
+    execute {
+        stream true
+        status.executing "inspecting container..."
+        command "docker inspect $@"
+        status.executing "done"
+    }
+}
+
+name.restart {
+    description "Restart container by name"
+    execute {
+        stream true
+        status.executing "restarting container..."
+        command "docker restart $@"
+        status.executing "done"
+    }
+}
+
+name.stop {
+    description "Stop container by name"
+    execute {
+        stream true
+        status.executing "stopping container..."
+        command "docker stop $@"
+        status.executing "done"
+    }
+}
+
+name.start {
+    description "Start container by name"
+    execute {
+        stream true
+        status.executing "starting container..."
+        command "docker start $@"
+        status.executing "done"
+    }
+}
+
+execute {
+    stream false
+    print "Usage: /docker ls | ps | ps-all | inspect <name> | restart <name> | stop <name> | start <name>"
+}

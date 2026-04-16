@@ -1,0 +1,10 @@
+// serverbot runtime config
+telegram_token ""
+alert_chat_id 0
+verbose false
+worker_interval_seconds 30
+db_path "/run/serverbot/serverbot.db"
+allowed_units ["bind9.service", "docker.service"]
+allowed_zones ["rpz.local"]
+alert_check "system-health" type="placeholder" interval=30 enabled=true
+principal_grant "user:1" tag="command.status"
