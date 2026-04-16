@@ -55,6 +55,18 @@ class InMemoryPrincipalTagRepository:
 
         self.state[principal_id] = tags
 
+    def has_principals(self) -> bool:
+        """Check whether any principal exists in in-memory ACL.
+
+        Args:
+            None.
+
+        Returns:
+            True when repository contains principals.
+        """
+
+        return bool(self.state)
+
 
 @dataclass
 class InMemoryAuditRepository:

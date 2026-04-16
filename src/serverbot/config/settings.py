@@ -14,4 +14,4 @@ class RuntimeOptions:
     """
 
     config_path: str = "config/serverbot.kdl"
-    command_config_path: str = "commands/example.kdl"
+    command_config_path: str = "commands"

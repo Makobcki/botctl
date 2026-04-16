@@ -46,6 +46,18 @@ class InMemoryPrincipalTagRepository:
 
         self.state[principal_id] = tags
 
+    def has_principals(self) -> bool:
+        """Check if repository already contains ACL principals.
+
+        Args:
+            None.
+
+        Returns:
+            True when any principal entry exists.
+        """
+
+        return bool(self.state)
+
 
 def test_acl_service_grant_and_revoke_tag() -> None:
     """ACL service should modify repository tags predictably.
@@ -68,3 +80,24 @@ def test_acl_service_grant_and_revoke_tag() -> None:
 
     service.revoke_tag(10, "view.status")
     assert service.get_principal(10).tags == frozenset()
+
+
+def test_acl_service_bootstrap_first_admin_only_once() -> None:
+    """First-admin bootstrap should work once on empty ACL repository.
+
+    Args:
+        None.
+
+    Returns:
+        None.
+    """
+
+    repository = InMemoryPrincipalTagRepository(state={})
+    service = AclService(principal_tag_repository=repository)
+
+    first = service.bootstrap_first_admin(100, frozenset({"command.status", "command.acl"}))
+    second = service.bootstrap_first_admin(200, frozenset({"command.status"}))
+
+    assert first is True
+    assert second is False
+    assert service.get_principal(100).tags == frozenset({"command.status", "command.acl"})

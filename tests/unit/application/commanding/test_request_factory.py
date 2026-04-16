@@ -35,6 +35,14 @@ def _build_registry() -> CommandRegistry:
         ),
         handler=PlaceholderHandler("ok"),
     )
+    registry.register(
+        descriptor=CommandDescriptor(
+            name="docker",
+            required_tag="ops.docker",
+            description="Docker operations",
+        ),
+        handler=PlaceholderHandler("ok"),
+    )
     return registry
 
 
@@ -72,3 +80,20 @@ def test_request_factory_rejects_invalid_prefix() -> None:
 
     with pytest.raises(DomainError):
         CommandRequestFactory(_build_registry(), CommandTokenParser()).from_telegram_text(1, "logs 100")
+
+
+def test_request_factory_keeps_raw_subcommands_for_noarg_descriptor() -> None:
+    """Factory should allow `/docker ls` when descriptor has no typed args.
+
+    Args:
+        None.
+
+    Returns:
+        None.
+    """
+
+    request = CommandRequestFactory(_build_registry(), CommandTokenParser()).from_telegram_text(1, "/docker ls")
+
+    assert request.command_name == "docker"
+    assert request.arguments == {}
+    assert request.raw_tokens == ("ls",)

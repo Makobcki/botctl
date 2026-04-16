@@ -1,0 +1,8 @@
+name "whoami"
+description "Show current principal and permissions"
+category = ["acl", "status"]
+
+execute {
+    stream false
+    print "Usage: /whoami"
+}

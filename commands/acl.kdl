@@ -1,0 +1,48 @@
+name "acl"
+description "Manage bot ACL principals and tags"
+category = ["acl", "admin"]
+
+name.list {
+    description "Show ACL principals and grants"
+    execute {
+        stream false
+        print "Usage: /acl list"
+    }
+}
+
+name.add-user {
+    description "Add user principal"
+    execute {
+        stream false
+        print "Usage: /acl add-user <principal_id> <tag>"
+    }
+}
+
+name.add-chat {
+    description "Add chat principal"
+    execute {
+        stream false
+        print "Usage: /acl add-chat <principal_id> <tag>"
+    }
+}
+
+name.grant {
+    description "Grant tag to principal"
+    execute {
+        stream false
+        print "Usage: /acl grant <principal_id> <tag>"
+    }
+}
+
+name.revoke {
+    description "Revoke tag from principal"
+    execute {
+        stream false
+        print "Usage: /acl revoke <principal_id> <tag>"
+    }
+}
+
+execute {
+    stream false
+    print "Usage: /acl list | add-user <id> <tag> | add-chat <id> <tag> | grant <id> <tag> | revoke <id> <tag>"
+}

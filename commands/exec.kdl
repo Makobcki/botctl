@@ -1,0 +1,32 @@
+name "exec"
+description "Run safe command templates from catalog"
+category = ["ops", "shell"]
+
+name.bind_reload {
+    description "Execute bind reload template"
+    execute {
+        stream false
+        print "Usage: /exec bind_reload"
+    }
+}
+
+name.journal_unit {
+    description "Execute journal unit template (unit, lines)"
+    execute {
+        stream false
+        print "Usage: /exec journal_unit <unit> [N]"
+    }
+}
+
+name.named_checkzone {
+    description "Execute named-checkzone template"
+    execute {
+        stream false
+        print "Usage: /exec named_checkzone <zone> <file>"
+    }
+}
+
+execute {
+    stream false
+    print "Usage: /exec bind_reload | journal_unit <unit> [N] | named_checkzone <zone> <file>"
+}
